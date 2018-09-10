@@ -19,8 +19,8 @@ test: uninstall install
 	cd tests && nosetests -v --with-coverage --cover-package=vlab_insightiq_api
 
 images: build
-	sudo docker build -f ApiDockerfile -t willnx/vlab-insightiq-api .
-	sudo docker build -f WorkerDockerfile -t willnx/vlab-insightiq-worker .
+	docker build -f ApiDockerfile -t willnx/vlab-insightiq-api .
+	docker build -f WorkerDockerfile -t willnx/vlab-insightiq-worker .
 
 up:
 	docker-compose -p vlabinsightiq up --abort-on-container-exit
