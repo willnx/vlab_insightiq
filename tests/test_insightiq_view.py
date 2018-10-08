@@ -44,6 +44,16 @@ class TestInsightIQView(unittest.TestCase):
 
         self.assertEqual(task_id, expected)
 
+    def test_get_task_link(self):
+        """InsightIQView - GET on /api/1/inf/insightiq sets the Link header"""
+        resp = self.app.get('/api/1/inf/insightiq',
+                            headers={'X-Auth': self.token})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+
+        self.assertEqual(task_id, expected)
+
     def test_post_task(self):
         """InsightIQView - POST on /api/1/inf/insightiq returns a task-id"""
         resp = self.app.post('/api/1/inf/insightiq',
@@ -52,6 +62,17 @@ class TestInsightIQView(unittest.TestCase):
 
         task_id = resp.json['content']['task-id']
         expected = 'asdf-asdf-asdf'
+
+        self.assertEqual(task_id, expected)
+
+    def test_post_task_link(self):
+        """InsightIQView - POST on /api/1/inf/insightiq sets the Link header"""
+        resp = self.app.post('/api/1/inf/insightiq',
+                             headers={'X-Auth': self.token},
+                             json={'name': "myIIQ", 'image': "4.1.2", 'network': "someNetwork"})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
@@ -66,6 +87,17 @@ class TestInsightIQView(unittest.TestCase):
 
         self.assertEqual(task_id, expected)
 
+    def test_delete_task_link(self):
+        """InsightIQView - DELETE on /api/1/inf/insightiq sets the Link header"""
+        resp = self.app.delete('/api/1/inf/insightiq',
+                               headers={'X-Auth': self.token},
+                               json={'name': "myIIQ"})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+
+        self.assertEqual(task_id, expected)
+
     def test_get_image_task(self):
         """InsightIQView - GET on /api/1/inf/insightiq/image returns a task-id"""
         resp = self.app.get('/api/1/inf/insightiq/image',
@@ -73,6 +105,16 @@ class TestInsightIQView(unittest.TestCase):
 
         task_id = resp.json['content']['task-id']
         expected = 'asdf-asdf-asdf'
+
+        self.assertEqual(task_id, expected)
+
+    def test_get_image_task_link(self):
+        """InsightIQView - GET on /api/1/inf/insightiq/image sets the Link header"""
+        resp = self.app.get('/api/1/inf/insightiq/image',
+                            headers={'X-Auth': self.token})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
