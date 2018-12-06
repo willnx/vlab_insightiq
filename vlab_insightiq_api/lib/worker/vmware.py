@@ -3,14 +3,9 @@
 import time
 import random
 import os.path
-from celery.utils.log import get_task_logger
 from vlab_inf_common.vmware import vCenter, Ova, vim, virtual_machine, consume_task
 
 from vlab_insightiq_api.lib import const
-
-
-logger = get_task_logger(__name__)
-logger.setLevel(const.VLAB_INSIGHTIQ_LOG_LEVEL.upper())
 
 
 def show_insightiq(username):
@@ -21,20 +16,18 @@ def show_insightiq(username):
     :param username: The user requesting info about their insightiq
     :type username: String
     """
-    info = {}
+    insightiq_vms = {}
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER, \
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
-        insightiq_vms = {}
         for vm in folder.childEntity:
             info = virtual_machine.get_info(vcenter, vm)
-            kind, version = info['note'].split('=')
-            if kind == 'InsightIQ':
+            if info['component'] == 'InsightIQ':
                 insightiq_vms[vm.name] = info
     return insightiq_vms
 
 
-def delete_insightiq(username, machine_name):
+def delete_insightiq(username, machine_name, logger):
     """Unregister and destroy a user's insightiq
 
     :Returns: None
@@ -51,8 +44,7 @@ def delete_insightiq(username, machine_name):
         for entity in folder.childEntity:
             if entity.name == machine_name:
                 info = virtual_machine.get_info(vcenter, entity)
-                kind, version = info['note'].split('=')
-                if kind == 'InsightIQ':
+                if info['component'] == 'InsightIQ':
                     logger.debug('powering off VM')
                     virtual_machine.power(entity, state='off')
                     delete_task = entity.Destroy_Task()
@@ -63,12 +55,16 @@ def delete_insightiq(username, machine_name):
             raise ValueError('No {} named {} found'.format('InsightIQ', machine_name))
 
 
-def create_insightiq(username, machine_name, image, network):
+def create_insightiq(username, machine_name, image, network, logger):
     """Deploy a new instance of InsightIQ"""
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         image_name = convert_name(image)
-        ova = Ova(os.path.join(const.VLAB_INSIGHTIQ_IMAGES_DIR, image_name))
+        try:
+            ova = Ova(os.path.join(const.VLAB_INSIGHTIQ_IMAGES_DIR, image_name))
+        except FileNotFoundError:
+            error = 'Invalid version of InsightIQ: {}'.format(image)
+            raise ValueError(error)
         try:
             network_map = vim.OvfManager.NetworkMapping()
             network_map.name = ova.networks[0]
@@ -80,11 +76,16 @@ def create_insightiq(username, machine_name, image, network):
                                                      username, machine_name, logger)
         finally:
             ova.close()
-        spec = vim.vm.ConfigSpec()
-        spec.annotation = 'InsightIQ={}'.format(image)
-        task = the_vm.ReconfigVM_Task(spec)
-        consume_task(task)
-        return virtual_machine.get_info(vcenter, the_vm)
+        meta_data = {'component' : "InsightIQ",
+                     'created': time.time(),
+                     'version': image,
+                     'configured': False,
+                     'generation': 1,
+                    }
+        virtual_machine.set_meta(the_vm, meta_data)
+        info = virtual_machine.get_info(vcenter, the_vm)
+        return {the_vm.name: info}
+
 
 def list_images():
     """Obtain a list of available versions of insightiq that can be created

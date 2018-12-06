@@ -23,10 +23,18 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'worked': True, 'note': "InsightIQ=4.1.2"}
+        fake_get_info.return_value = {'component': 'InsightIQ',
+                                      'created': 1234,
+                                      'version': '4.1.2',
+                                      'configured': False,
+                                      'generation': 1}
 
         output = vmware.show_insightiq(username='alice')
-        expected = {'myIIQ': {'worked': True, 'note': "InsightIQ=4.1.2"}}
+        expected = {'myIIQ': {'component': 'InsightIQ',
+                              'created': 1234,
+                              'version': '4.1.2',
+                              'configured': False,
+                              'generation': 1}}
 
         self.assertEqual(output, expected)
 
@@ -39,20 +47,27 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'worked': True, 'note': "noIIQ=4.1.2"}
+        fake_get_info.return_value = {'component': 'OtherThing',
+                                      'created': 1234,
+                                      'version': '4.1.2',
+                                      'configured': False,
+                                      'generation': 1}
 
         output = vmware.show_insightiq(username='alice')
         expected = {}
 
         self.assertEqual(output, expected)
 
+    @patch.object(vmware.virtual_machine, 'set_meta')
     @patch.object(vmware, 'consume_task')
     @patch.object(vmware, 'Ova')
     @patch.object(vmware.virtual_machine, 'get_info')
     @patch.object(vmware.virtual_machine, 'deploy_from_ova')
     @patch.object(vmware, 'vCenter')
-    def test_create_insightiq(self, fake_vCenter, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_consume_task):
+    def test_create_insightiq(self, fake_vCenter, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_consume_task, fake_set_meta):
         """``create_insightiq`` returns the new insightiq's info when everything works"""
+        fake_logger = MagicMock()
+        fake_deploy_from_ova.return_value.name = 'myIIQ'
         fake_Ova.return_value.networks = ['vLabNetwork']
         fake_get_info.return_value = {'worked' : True}
         fake_vCenter.return_value.__enter__.return_value.networks = {'someNetwork': vmware.vim.Network(moId='asdf')}
@@ -60,8 +75,9 @@ class TestVMware(unittest.TestCase):
         output = vmware.create_insightiq(username='alice',
                                          machine_name='myIIQ',
                                          image='4.1.2',
-                                         network='someNetwork')
-        expected = {'worked': True}
+                                         network='someNetwork',
+                                         logger=fake_logger)
+        expected = {'myIIQ' : {'worked': True}}
 
         self.assertEqual(output, expected)
 
@@ -72,6 +88,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_create_insightiq_value_error(self, fake_vCenter, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_consume_task):
         """``create_insightiq`` raises ValueError if supplied with a non-existing network"""
+        fake_logger = MagicMock()
         fake_Ova.return_value.networks = ['vLabNetwork']
         fake_get_info.return_value = {'worked' : True}
         fake_vCenter.return_value.__enter__.return_value.networks = {'someNetwork': vmware.vim.Network(moId='asdf')}
@@ -80,7 +97,27 @@ class TestVMware(unittest.TestCase):
             vmware.create_insightiq(username='alice',
                                     machine_name='myIIQ',
                                     image='4.1.2',
-                                    network='not a thing')
+                                    network='not a thing',
+                                    logger=fake_logger)
+
+    @patch.object(vmware, 'consume_task')
+    @patch.object(vmware, 'Ova')
+    @patch.object(vmware.virtual_machine, 'get_info')
+    @patch.object(vmware.virtual_machine, 'deploy_from_ova')
+    @patch.object(vmware, 'vCenter')
+    def test_create_insightiq_bad_version(self, fake_vCenter, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_consume_task):
+        """``create_insightiq`` raises ValueError if supplied with a non-existing image"""
+        fake_logger = MagicMock()
+        fake_Ova.side_effect = FileNotFoundError('testing')
+        fake_get_info.return_value = {'worked' : True}
+        fake_vCenter.return_value.__enter__.return_value.networks = {'someNetwork': vmware.vim.Network(moId='asdf')}
+
+        with self.assertRaises(ValueError):
+            vmware.create_insightiq(username='alice',
+                                    machine_name='myIIQ',
+                                    image='4.1.2',
+                                    network='not a thing',
+                                    logger=fake_logger)
 
     @patch.object(vmware.virtual_machine, 'get_info')
     @patch.object(vmware, 'consume_task')
@@ -88,13 +125,18 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_insightiq(self, fake_vCenter, fake_power, fake_consume_task, fake_get_info):
         """``delete_insightiq`` powers off the VM then deletes it"""
+        fake_logger = MagicMock()
         fake_vm = MagicMock()
         fake_vm.name = 'myIIQ'
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'worked': True, 'note': "InsightIQ=4.1.2"}
-        vmware.delete_insightiq(username='alice', machine_name='myIIQ')
+        fake_get_info.return_value = {'component': 'InsightIQ',
+                                      'created': 1234,
+                                      'version': '4.1.2',
+                                      'configured': False,
+                                      'generation': 1}
+        vmware.delete_insightiq(username='alice', machine_name='myIIQ', logger=fake_logger)
 
         self.assertTrue(fake_power.called)
         self.assertTrue(fake_vm.Destroy_Task.called)
@@ -105,6 +147,7 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_insightiq_value_error(self, fake_vCenter, fake_power, fake_consume_task, fake_get_info):
         """``delete_insightiq`` raises ValueError if no InsightiQ machine has the supplied name"""
+        fake_logger = MagicMock()
         fake_vm = MagicMock()
         fake_vm.name = 'myIIQ'
         fake_folder = MagicMock()
@@ -113,7 +156,7 @@ class TestVMware(unittest.TestCase):
         fake_get_info.return_value = {'worked': True, 'note': "InsightIQ=4.1.2"}
 
         with self.assertRaises(ValueError):
-            vmware.delete_insightiq(username='alice', machine_name='not a thing')
+            vmware.delete_insightiq(username='alice', machine_name='not a thing', logger=fake_logger)
 
     @patch.object(vmware.os, 'listdir')
     def test_list_images(self, fake_listdir):
