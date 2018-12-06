@@ -100,6 +100,25 @@ class TestVMware(unittest.TestCase):
                                     network='not a thing',
                                     logger=fake_logger)
 
+    @patch.object(vmware, 'consume_task')
+    @patch.object(vmware, 'Ova')
+    @patch.object(vmware.virtual_machine, 'get_info')
+    @patch.object(vmware.virtual_machine, 'deploy_from_ova')
+    @patch.object(vmware, 'vCenter')
+    def test_create_insightiq_bad_version(self, fake_vCenter, fake_deploy_from_ova, fake_get_info, fake_Ova, fake_consume_task):
+        """``create_insightiq`` raises ValueError if supplied with a non-existing image"""
+        fake_logger = MagicMock()
+        fake_Ova.side_effect = FileNotFoundError('testing')
+        fake_get_info.return_value = {'worked' : True}
+        fake_vCenter.return_value.__enter__.return_value.networks = {'someNetwork': vmware.vim.Network(moId='asdf')}
+
+        with self.assertRaises(ValueError):
+            vmware.create_insightiq(username='alice',
+                                    machine_name='myIIQ',
+                                    image='4.1.2',
+                                    network='not a thing',
+                                    logger=fake_logger)
+
     @patch.object(vmware.virtual_machine, 'get_info')
     @patch.object(vmware, 'consume_task')
     @patch.object(vmware.virtual_machine, 'power')

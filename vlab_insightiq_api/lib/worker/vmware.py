@@ -60,7 +60,11 @@ def create_insightiq(username, machine_name, image, network, logger):
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         image_name = convert_name(image)
-        ova = Ova(os.path.join(const.VLAB_INSIGHTIQ_IMAGES_DIR, image_name))
+        try:
+            ova = Ova(os.path.join(const.VLAB_INSIGHTIQ_IMAGES_DIR, image_name))
+        except FileNotFoundError:
+            error = 'Invalid version of InsightIQ: {}'.format(image)
+            raise ValueError(error)
         try:
             network_map = vim.OvfManager.NetworkMapping()
             network_map.name = ova.networks[0]
