@@ -16,15 +16,13 @@ def show_insightiq(username):
     :param username: The user requesting info about their insightiq
     :type username: String
     """
-    info = {}
+    insightiq_vms = {}
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER, \
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
-        insightiq_vms = {}
         for vm in folder.childEntity:
             info = virtual_machine.get_info(vcenter, vm)
-            kind, version = info['note'].split('=')
-            if kind == 'InsightIQ':
+            if info['component'] == 'InsightIQ':
                 insightiq_vms[vm.name] = info
     return insightiq_vms
 
@@ -46,8 +44,7 @@ def delete_insightiq(username, machine_name, logger):
         for entity in folder.childEntity:
             if entity.name == machine_name:
                 info = virtual_machine.get_info(vcenter, entity)
-                kind, version = info['note'].split('=')
-                if kind == 'InsightIQ':
+                if info['component'] == 'InsightIQ':
                     logger.debug('powering off VM')
                     virtual_machine.power(entity, state='off')
                     delete_task = entity.Destroy_Task()
@@ -75,11 +72,16 @@ def create_insightiq(username, machine_name, image, network, logger):
                                                      username, machine_name, logger)
         finally:
             ova.close()
-        spec = vim.vm.ConfigSpec()
-        spec.annotation = 'InsightIQ={}'.format(image)
-        task = the_vm.ReconfigVM_Task(spec)
-        consume_task(task)
-        return virtual_machine.get_info(vcenter, the_vm)
+        meta_data = {'component' : "InsightIQ",
+                     'created': time.time(),
+                     'version': image,
+                     'configured': False,
+                     'generation': 1,
+                    }
+        virtual_machine.set_meta(the_vm, meta_data)
+        info = virtual_machine.get_info(vcenter, the_vm)
+        return {the_vm.name: info}
+
 
 def list_images():
     """Obtain a list of available versions of insightiq that can be created
