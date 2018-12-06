@@ -3,14 +3,9 @@
 import time
 import random
 import os.path
-from celery.utils.log import get_task_logger
 from vlab_inf_common.vmware import vCenter, Ova, vim, virtual_machine, consume_task
 
 from vlab_insightiq_api.lib import const
-
-
-logger = get_task_logger(__name__)
-logger.setLevel(const.VLAB_INSIGHTIQ_LOG_LEVEL.upper())
 
 
 def show_insightiq(username):
@@ -34,7 +29,7 @@ def show_insightiq(username):
     return insightiq_vms
 
 
-def delete_insightiq(username, machine_name):
+def delete_insightiq(username, machine_name, logger):
     """Unregister and destroy a user's insightiq
 
     :Returns: None
@@ -63,7 +58,7 @@ def delete_insightiq(username, machine_name):
             raise ValueError('No {} named {} found'.format('InsightIQ', machine_name))
 
 
-def create_insightiq(username, machine_name, image, network):
+def create_insightiq(username, machine_name, image, network, logger):
     """Deploy a new instance of InsightIQ"""
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
                  password=const.INF_VCENTER_PASSWORD) as vcenter:

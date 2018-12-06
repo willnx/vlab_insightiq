@@ -61,8 +61,9 @@ class InsightIQView(TaskView):
     def get(self, *args, **kwargs):
         """Display the insightiq instances you own"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('insightiq.show', [username])
+        task = current_app.celery_app.send_task('insightiq.show', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -74,12 +75,13 @@ class InsightIQView(TaskView):
     def post(self, *args, **kwargs):
         """Create a insightiq"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         body = kwargs['body']
         network = kwargs['body']['network']
         machine_name = kwargs['body']['name']
         image = kwargs['body']['image']
-        task = current_app.celery_app.send_task('insightiq.create', [username, machine_name, image, network])
+        task = current_app.celery_app.send_task('insightiq.create', [username, machine_name, image, network, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -91,9 +93,10 @@ class InsightIQView(TaskView):
     def delete(self, *args, **kwargs):
         """Destroy a insightiq"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         machine_name = kwargs['body']['name']
-        task = current_app.celery_app.send_task('insightiq.delete', [username, machine_name])
+        task = current_app.celery_app.send_task('insightiq.delete', [username, machine_name, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -106,8 +109,9 @@ class InsightIQView(TaskView):
     def image(self, *args, **kwargs):
         """Show available versions of insightiq that can be deployed"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('insightiq.image')
+        task = current_app.celery_app.send_task('insightiq.image', [txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
