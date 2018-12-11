@@ -23,18 +23,18 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'component': 'InsightIQ',
-                                      'created': 1234,
-                                      'version': '4.1.2',
-                                      'configured': False,
-                                      'generation': 1}
+        fake_get_info.return_value = {'meta': {'component': 'InsightIQ',
+                                               'created': 1234,
+                                               'version': '4.1.2',
+                                               'configured': False,
+                                               'generation': 1}}
 
         output = vmware.show_insightiq(username='alice')
-        expected = {'myIIQ': {'component': 'InsightIQ',
-                              'created': 1234,
-                              'version': '4.1.2',
-                              'configured': False,
-                              'generation': 1}}
+        expected = {'myIIQ':{'meta': {'component': 'InsightIQ',
+                                               'created': 1234,
+                                               'version': '4.1.2',
+                                               'configured': False,
+                                               'generation': 1}}}
 
         self.assertEqual(output, expected)
 
@@ -47,11 +47,11 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'component': 'OtherThing',
-                                      'created': 1234,
-                                      'version': '4.1.2',
-                                      'configured': False,
-                                      'generation': 1}
+        fake_get_info.return_value = {'meta': {'component': 'otherThing',
+                                               'created': 1234,
+                                               'version': '4.1.2',
+                                               'configured': False,
+                                               'generation': 1}}
 
         output = vmware.show_insightiq(username='alice')
         expected = {}
@@ -131,11 +131,11 @@ class TestVMware(unittest.TestCase):
         fake_folder = MagicMock()
         fake_folder.childEntity = [fake_vm]
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
-        fake_get_info.return_value = {'component': 'InsightIQ',
-                                      'created': 1234,
-                                      'version': '4.1.2',
-                                      'configured': False,
-                                      'generation': 1}
+        fake_get_info.return_value = {'meta': {'component': 'InsightIQ',
+                                               'created': 1234,
+                                               'version': '4.1.2',
+                                               'configured': False,
+                                               'generation': 1}}
         vmware.delete_insightiq(username='alice', machine_name='myIIQ', logger=fake_logger)
 
         self.assertTrue(fake_power.called)

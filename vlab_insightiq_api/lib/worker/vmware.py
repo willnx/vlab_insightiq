@@ -22,7 +22,7 @@ def show_insightiq(username):
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
         for vm in folder.childEntity:
             info = virtual_machine.get_info(vcenter, vm)
-            if info['component'] == 'InsightIQ':
+            if info['meta']['component'] == 'InsightIQ':
                 insightiq_vms[vm.name] = info
     return insightiq_vms
 
@@ -37,6 +37,9 @@ def delete_insightiq(username, machine_name, logger):
 
     :param machine_name: The name of the VM to delete
     :type machine_name: String
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
     """
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER, \
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
@@ -44,7 +47,7 @@ def delete_insightiq(username, machine_name, logger):
         for entity in folder.childEntity:
             if entity.name == machine_name:
                 info = virtual_machine.get_info(vcenter, entity)
-                if info['component'] == 'InsightIQ':
+                if info['meta']['component'] == 'InsightIQ':
                     logger.debug('powering off VM')
                     virtual_machine.power(entity, state='off')
                     delete_task = entity.Destroy_Task()
@@ -56,7 +59,25 @@ def delete_insightiq(username, machine_name, logger):
 
 
 def create_insightiq(username, machine_name, image, network, logger):
-    """Deploy a new instance of InsightIQ"""
+    """Deploy a new instance of InsightIQ
+
+    :Returns: Dictionary
+
+    :param username: The name of the user who wants to create a new Icap
+    :type username: String
+
+    :param machine_name: The name of the new instance of Icap
+    :type machine_name: String
+
+    :param image: The image/version of Icap to create
+    :type image: String
+
+    :param network: The name of the network to connect the new Icap instance up to
+    :type network: String
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
+    """
     with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
                  password=const.INF_VCENTER_PASSWORD) as vcenter:
         image_name = convert_name(image)
