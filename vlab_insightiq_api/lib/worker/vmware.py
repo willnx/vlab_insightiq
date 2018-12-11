@@ -22,7 +22,7 @@ def show_insightiq(username):
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
         for vm in folder.childEntity:
             info = virtual_machine.get_info(vcenter, vm)
-            if info['component'] == 'InsightIQ':
+            if info['meta']['component'] == 'InsightIQ':
                 insightiq_vms[vm.name] = info
     return insightiq_vms
 
@@ -47,7 +47,7 @@ def delete_insightiq(username, machine_name, logger):
         for entity in folder.childEntity:
             if entity.name == machine_name:
                 info = virtual_machine.get_info(vcenter, entity)
-                if info['component'] == 'InsightIQ':
+                if info['meta']['component'] == 'InsightIQ':
                     logger.debug('powering off VM')
                     virtual_machine.power(entity, state='off')
                     delete_task = entity.Destroy_Task()
