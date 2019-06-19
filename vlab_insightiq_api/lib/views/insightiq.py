@@ -5,7 +5,7 @@ Defines the RESTful API for the InsightIQ deployment service
 import ujson
 from flask import current_app
 from flask_classy import request, route, Response
-from vlab_inf_common.views import TaskView
+from vlab_inf_common.views import MachineView
 from vlab_inf_common.vmware import vCenter, vim
 from vlab_api_common import describe, get_logger, requires, validate_input
 
@@ -16,9 +16,10 @@ from vlab_insightiq_api.lib import const
 logger = get_logger(__name__, loglevel=const.VLAB_INSIGHTIQ_LOG_LEVEL)
 
 
-class InsightIQView(TaskView):
+class InsightIQView(MachineView):
     """API end point for InsightIQ instances"""
     route_base = '/api/1/inf/insightiq'
+    RESOURCE = 'insightiq'
     POST_SCHEMA = { "$schema": "http://json-schema.org/draft-04/schema#",
                     "type": "object",
                     "description": "Create an InsightIQ instance",

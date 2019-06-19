@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 setup(name="vlab-insightiq-api",
       author="Nicholas Willhite,",
       author_email='willnx84@gmail.com',
-      version='2018.12.28',
+      version='2019.6.19',
       packages=find_packages(),
       include_package_data=True,
       package_files={'vlab_insightiq_api' : ['app.ini']},
