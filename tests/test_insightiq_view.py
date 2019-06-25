@@ -34,9 +34,19 @@ class TestInsightIQView(unittest.TestCase):
         cls.fake_task.id = 'asdf-asdf-asdf'
         app.celery_app.send_task.return_value = cls.fake_task
 
-    def test_get_task(self):
-        """InsightIQView - GET on /api/1/inf/insightiq returns a task-id"""
+    def test_v1_deprecated(self):
+        """InsightIQView - GET on /api/1/inf/insightiq returns an HTTP 404"""
         resp = self.app.get('/api/1/inf/insightiq',
+                            headers={'X-Auth': self.token})
+
+        status = resp.status_code
+        expected = 404
+
+        self.assertEqual(status, expected)
+
+    def test_get_task(self):
+        """InsightIQView - GET on /api/2/inf/insightiq returns a task-id"""
+        resp = self.app.get('/api/2/inf/insightiq',
                             headers={'X-Auth': self.token})
 
         task_id = resp.json['content']['task-id']
@@ -45,18 +55,18 @@ class TestInsightIQView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_get_task_link(self):
-        """InsightIQView - GET on /api/1/inf/insightiq sets the Link header"""
-        resp = self.app.get('/api/1/inf/insightiq',
+        """InsightIQView - GET on /api/2/inf/insightiq sets the Link header"""
+        resp = self.app.get('/api/2/inf/insightiq',
                             headers={'X-Auth': self.token})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_post_task(self):
-        """InsightIQView - POST on /api/1/inf/insightiq returns a task-id"""
-        resp = self.app.post('/api/1/inf/insightiq',
+        """InsightIQView - POST on /api/2/inf/insightiq returns a task-id"""
+        resp = self.app.post('/api/2/inf/insightiq',
                              headers={'X-Auth': self.token},
                              json={'name': "myIIQ", 'image': "4.1.2", 'network': "someNetwork"})
 
@@ -66,19 +76,19 @@ class TestInsightIQView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_post_task_link(self):
-        """InsightIQView - POST on /api/1/inf/insightiq sets the Link header"""
-        resp = self.app.post('/api/1/inf/insightiq',
+        """InsightIQView - POST on /api/2/inf/insightiq sets the Link header"""
+        resp = self.app.post('/api/2/inf/insightiq',
                              headers={'X-Auth': self.token},
                              json={'name': "myIIQ", 'image': "4.1.2", 'network': "someNetwork"})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_delete_task(self):
-        """InsightIQView - DELETE on /api/1/inf/insightiq returns a task-id"""
-        resp = self.app.delete('/api/1/inf/insightiq',
+        """InsightIQView - DELETE on /api/2/inf/insightiq returns a task-id"""
+        resp = self.app.delete('/api/2/inf/insightiq',
                                headers={'X-Auth': self.token},
                                json={'name': "myIIQ"})
 
@@ -88,19 +98,19 @@ class TestInsightIQView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_delete_task_link(self):
-        """InsightIQView - DELETE on /api/1/inf/insightiq sets the Link header"""
-        resp = self.app.delete('/api/1/inf/insightiq',
+        """InsightIQView - DELETE on /api/2/inf/insightiq sets the Link header"""
+        resp = self.app.delete('/api/2/inf/insightiq',
                                headers={'X-Auth': self.token},
                                json={'name': "myIIQ"})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 
     def test_get_image_task(self):
-        """InsightIQView - GET on /api/1/inf/insightiq/image returns a task-id"""
-        resp = self.app.get('/api/1/inf/insightiq/image',
+        """InsightIQView - GET on /api/2/inf/insightiq/image returns a task-id"""
+        resp = self.app.get('/api/2/inf/insightiq/image',
                             headers={'X-Auth': self.token})
 
         task_id = resp.json['content']['task-id']
@@ -109,12 +119,12 @@ class TestInsightIQView(unittest.TestCase):
         self.assertEqual(task_id, expected)
 
     def test_get_image_task_link(self):
-        """InsightIQView - GET on /api/1/inf/insightiq/image sets the Link header"""
-        resp = self.app.get('/api/1/inf/insightiq/image',
+        """InsightIQView - GET on /api/2/inf/insightiq/image sets the Link header"""
+        resp = self.app.get('/api/2/inf/insightiq/image',
                             headers={'X-Auth': self.token})
 
         task_id = resp.headers['Link']
-        expected = '<https://localhost/api/1/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
+        expected = '<https://localhost/api/2/inf/insightiq/task/asdf-asdf-asdf>; rel=status'
 
         self.assertEqual(task_id, expected)
 

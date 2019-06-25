@@ -18,7 +18,7 @@ logger = get_logger(__name__, loglevel=const.VLAB_INSIGHTIQ_LOG_LEVEL)
 
 class InsightIQView(MachineView):
     """API end point for InsightIQ instances"""
-    route_base = '/api/1/inf/insightiq'
+    route_base = '/api/2/inf/insightiq'
     RESOURCE = 'insightiq'
     POST_SCHEMA = { "$schema": "http://json-schema.org/draft-04/schema#",
                     "type": "object",
@@ -79,7 +79,7 @@ class InsightIQView(MachineView):
         txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
         body = kwargs['body']
-        network = kwargs['body']['network']
+        network = '{}_{}'.format(username, kwargs['body']['network'])
         machine_name = kwargs['body']['name']
         image = kwargs['body']['image']
         task = current_app.celery_app.send_task('insightiq.create', [username, machine_name, image, network, txn_id])
