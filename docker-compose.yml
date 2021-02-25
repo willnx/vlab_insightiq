@@ -11,14 +11,14 @@ services:
       - INF_VCENTER_USER=Administrator@vsphere.local
       - INF_VCENTER_PASSWORD=1.Password
     volumes:
-      - ./vlab_insightiq_api:/usr/lib/python3.6/site-packages/vlab_insightiq_api
+      - ./vlab_insightiq_api:/usr/lib/python3.8/site-packages/vlab_insightiq_api
     command: ["python3", "app.py"]
 
   insightiq-worker:
     image:
       willnx/vlab-insightiq-worker
     volumes:
-      - ./vlab_insightiq_api:/usr/lib/python3.6/site-packages/vlab_insightiq_api
+      - ./vlab_insightiq_api:/usr/lib/python3.8/site-packages/vlab_insightiq_api
       - /mnt/raid/images/insightiq:/images:ro
     environment:
       - INF_VCENTER_SERVER=changeME
